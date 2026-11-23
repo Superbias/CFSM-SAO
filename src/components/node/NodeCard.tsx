@@ -165,9 +165,7 @@ export const NodeCard = memo(function NodeCard({
               )}
             </div>
 
-            <ReturnRouteSummary uuid={uuid} />
-
-        <NodeCardFooter
+            <NodeCardFooter
               expire={expire}
               expireColor={expireColor}
               uptime={uptime}
@@ -278,6 +276,8 @@ export const NodeCard = memo(function NodeCard({
             />
           )}
         </div>
+
+        <ReturnRouteSummary uuid={uuid} />
 
         <NodeCardFooter
           expire={expire}
