@@ -1,5 +1,6 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { HomeInstanceLink } from "./HomeInstanceLink";
+import { ReturnRouteSummary } from "@/components/instance/ReturnRoutes";
 import {
   Cpu,
   Gauge,
@@ -164,7 +165,9 @@ export const NodeCard = memo(function NodeCard({
               )}
             </div>
 
-            <NodeCardFooter
+            <ReturnRouteSummary uuid={uuid} />
+
+        <NodeCardFooter
               expire={expire}
               expireColor={expireColor}
               uptime={uptime}
@@ -195,6 +198,7 @@ export const NodeCard = memo(function NodeCard({
               lossColor={lossColor}
             />
           )}
+          <ReturnRouteSummary uuid={uuid} />
         </div>
       </article>
     );

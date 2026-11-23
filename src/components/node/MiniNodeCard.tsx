@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { HomeInstanceLink } from "./HomeInstanceLink";
+import { ReturnRouteSummary } from "@/components/instance/ReturnRoutes";
 import {
   ArrowDown,
   ArrowUp,
@@ -485,6 +486,7 @@ export const MiniNodeCard = memo(function MiniNodeCard({
             pingLoading={pingLoading}
             pingError={pingError}
           />
+          <ReturnRouteSummary uuid={uuid} />
         </div>
       </article>
     );
@@ -513,6 +515,7 @@ export const MiniNodeCard = memo(function MiniNodeCard({
         pingLoading={pingLoading}
         pingError={pingError}
       />
+      <ReturnRouteSummary uuid={uuid} />
     </article>
   );
 });

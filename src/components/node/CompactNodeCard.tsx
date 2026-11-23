@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { HomeInstanceLink } from "./HomeInstanceLink";
+import { ReturnRouteSummary } from "@/components/instance/ReturnRoutes";
 import {
   ArrowDown,
   ArrowUp,
@@ -810,6 +811,7 @@ export const CompactNodeCard = memo(function CompactNodeCard({
               pingError={pingError}
             />
           )}
+          <ReturnRouteSummary uuid={uuid} />
         </div>
       </article>
     );
@@ -862,6 +864,7 @@ export const CompactNodeCard = memo(function CompactNodeCard({
           pingError={pingError}
         />
       )}
+      <ReturnRouteSummary uuid={uuid} />
     </article>
   );
 });
