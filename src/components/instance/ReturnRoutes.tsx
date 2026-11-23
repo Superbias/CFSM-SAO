@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { cfsmGet } from "@/services/cfsm/http";
 import { getServerApiBase } from "@/services/api";
+import { HomeInstanceLink } from "@/components/node/HomeInstanceLink";
 
 const schema = z.object({
   measured_at: z.number().nullable(),
@@ -18,12 +19,53 @@ const networks: Record<number, string> = {
   58807: "移动 CMIN2", 58453: "移动 CMI", 9808: "中国移动",
 };
 
-export function ReturnRoutes({ uuid }: { uuid: string }) {
-  const query = useQuery({
+function useReturnRoutes(uuid: string) {
+  return useQuery({
     queryKey: ["return-routes", uuid, getServerApiBase(uuid)],
     queryFn: ({ signal }) => cfsmGet(`/api/return-routes?id=${encodeURIComponent(uuid)}`, schema, { base: getServerApiBase(uuid), signal }),
     staleTime: 60_000, retry: false,
   });
+}
+
+const shortNetworks: Record<number, string> = {
+  4134: "163", 4809: "CN2", 4837: "169", 9929: "9929",
+  58807: "CMIN2", 58453: "CMI", 9808: "移动骨干",
+};
+
+export function ReturnRouteSummary({ uuid }: { uuid: string }) {
+  const query = useReturnRoutes(uuid);
+  const measuredAt = query.data?.measured_at;
+  const stale = Boolean(measuredAt && Date.now() - measuredAt > 24 * 3600_000);
+  const date = measuredAt ? new Date(measuredAt) : null;
+  const timestamp = date ? `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}` : null;
+  return <HomeInstanceLink uuid={uuid} className="mt-2 block min-w-0 rounded-xl bg-(--bg-secondary) p-3 text-xs" aria-label="查看三网回程详情">
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
+      <span className="font-semibold text-(--text-primary)">三网线路 · 回程</span>
+      <span className="text-[10px] text-(--text-secondary)" title={date?.toLocaleString()}>
+        {timestamp ? `最近上报 ${timestamp}${stale ? " · 已过期" : ""}` : query.isPending ? "读取中…" : query.isError ? "读取失败" : "暂无探测"}
+      </span>
+    </div>
+    <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5">
+      {(Object.keys(names) as Array<keyof typeof names>).map(carrier => {
+        const route = query.data?.routes.find(item => item.carrier === carrier);
+        const evidence = [...new Set(route?.hops.map(hop => hop.asn === null ? undefined : shortNetworks[hop.asn]).filter(Boolean))];
+        const label = query.isPending ? "—" : query.isError ? "读取失败" : !route ? "未探测" : route.status === "error" ? "探测失败" : evidence.length ? evidence.join(" → ") : "未识别";
+        const incomplete = route?.status === "incomplete";
+        const title = route ? `${names[carrier]}：${label}；${route.status === "ok" ? "已到达目标" : incomplete ? "路径不完整，仅显示已识别网络" : route.error || "探测失败"}。依据 ASN 识别，不代表商业线路等级。` : `${names[carrier]}：${label}`;
+        return <div key={carrier} className="contents">
+          <span className="text-(--text-secondary)">{names[carrier]}</span>
+          <span title={title} className="rounded-lg px-2 py-1 text-center font-semibold wrap-break-word" style={{ background: evidence.length ? "color-mix(in srgb, var(--status-warning, #c49339) 12%, transparent)" : "var(--progress-bg)", color: evidence.length ? "var(--status-warning, #c49339)" : "var(--text-secondary)" }}>
+            {label}{incomplete ? " *" : ""}
+          </span>
+        </div>;
+      })}
+    </div>
+    {(stale || query.data?.routes.some(route => route.status === "incomplete")) && <p className="mt-1.5 text-[10px] text-(--text-secondary)">{stale ? "结果已超过 24 小时" : "* 路径不完整，点击查看详情"}</p>}
+  </HomeInstanceLink>;
+}
+
+export function ReturnRoutes({ uuid }: { uuid: string }) {
+  const query = useReturnRoutes(uuid);
   const stale = query.data?.measured_at && Date.now() - query.data.measured_at > 24 * 3600_000;
   return <section className="rounded-xl border border-(--border-color) p-4" aria-label="三网回程">
     <div className="flex items-center justify-between gap-3">
