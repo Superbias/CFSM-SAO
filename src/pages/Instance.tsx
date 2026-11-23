@@ -1,3 +1,4 @@
+import { ReturnRoutes } from '@/components/instance/ReturnRoutes';
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -174,6 +175,7 @@ export function Instance() {
     <div className="flex flex-col gap-5 py-2">
       <InstanceHomeLink />
       <InstanceDetails uuid={uuid} onNodeReady={alignCharts} />
+      <ReturnRoutes uuid={uuid} />
       <div ref={chartControlsRef} className="instance-chart-controls">
         <div className="instance-segmented">
           <button
