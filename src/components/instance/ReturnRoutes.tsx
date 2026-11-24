@@ -48,6 +48,12 @@ function FamilySwitch({ family, onChange, hasIpv6 }: { family: number; onChange:
   </div>;
 }
 
+export function NodeNetworkFamilySwitch({ uuid }: { uuid: string }) {
+  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
+  const [family, setFamily] = usePingFamily(uuid);
+  return <FamilySwitch family={family} onChange={setFamily} hasIpv6={hasIpv6} />;
+}
+
 function timeLabel(time?: number | null) {
   if (!time) return "暂无结果";
   const date = new Date(time);
@@ -74,13 +80,11 @@ function RouteCell({ route, query, direction }: { route?: Route; query: ReturnTy
 }
 
 export function ReturnRouteSummary({ uuid }: { uuid: string }) {
-  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
-  const [family, setFamily] = usePingFamily(uuid);
+  const [family] = usePingFamily(uuid);
   const forward = useRoutes(uuid, "forward", family), back = useRoutes(uuid, "return", family);
   return <section className="mt-2 min-w-0 rounded-xl bg-(--bg-secondary) p-3 text-xs" aria-label="三网去程和回程">
     <div className="mb-2 flex items-center justify-between gap-1">
       <span className="font-semibold text-(--text-primary)">三网线路</span>
-      <FamilySwitch family={family} onChange={setFamily} hasIpv6={hasIpv6} />
     </div>
     <HomeInstanceLink uuid={uuid} className="block" aria-label={`查看 IPv${family} 三网线路详情`}>
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5">
