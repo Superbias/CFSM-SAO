@@ -4,6 +4,7 @@ import { z } from "zod";
 import { cfsmGet } from "@/services/cfsm/http";
 import { getServerApiBase } from "@/services/api";
 import { HomeInstanceLink } from "@/components/node/HomeInstanceLink";
+import { useNodeMeta } from "@/hooks/useNode";
 
 const schema = z.object({
   measured_at: z.number().nullable(), state: z.string().optional(), error: z.string().optional(),
@@ -39,9 +40,9 @@ export function routeLabel(route?: Route) {
   return evidence.length ? evidence.join(" → ") : "未识别";
 }
 
-function FamilySwitch({ family, onChange }: { family: number; onChange: (family: number) => void }) {
+function FamilySwitch({ family, onChange, hasIpv6 }: { family: number; onChange: (family: number) => void; hasIpv6: boolean }) {
   return <div className="flex shrink-0 gap-1" role="group" aria-label="IP 协议">
-    {[4, 6].map(value => <button key={value} type="button" aria-pressed={family === value} onClick={() => onChange(value)}
+    {(hasIpv6 ? [4, 6] : [4]).map(value => <button key={value} type="button" aria-pressed={family === value} onClick={() => onChange(value)}
       className="rounded-md px-2 py-1 text-xs" style={{ background: family === value ? "var(--progress-bg)" : "transparent", color: family === value ? "var(--text-primary)" : "var(--text-secondary)" }}>IPv{value}</button>)}
   </div>;
 }
@@ -72,12 +73,14 @@ function RouteCell({ route, query, direction }: { route?: Route; query: ReturnTy
 }
 
 export function ReturnRouteSummary({ uuid }: { uuid: string }) {
-  const [family, setFamily] = useState(4);
+  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
+  const [selectedFamily, setFamily] = useState(4);
+  const family = hasIpv6 ? selectedFamily : 4;
   const forward = useRoutes(uuid, "forward", family), back = useRoutes(uuid, "return", family);
   return <section className="mt-2 min-w-0 rounded-xl bg-(--bg-secondary) p-3 text-xs" aria-label="三网去程和回程">
     <div className="mb-2 flex items-center justify-between gap-1">
       <span className="font-semibold text-(--text-primary)">三网线路</span>
-      <FamilySwitch family={family} onChange={setFamily} />
+      <FamilySwitch family={family} onChange={setFamily} hasIpv6={hasIpv6} />
     </div>
     <HomeInstanceLink uuid={uuid} className="block" aria-label={`查看 IPv${family} 三网线路详情`}>
       <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5">
@@ -127,9 +130,11 @@ function DirectionDetails({ uuid, family, direction }: { uuid: string; family: n
 }
 
 export function ReturnRoutes({ uuid }: { uuid: string }) {
-  const [family, setFamily] = useState(4);
+  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
+  const [selectedFamily, setFamily] = useState(4);
+  const family = hasIpv6 ? selectedFamily : 4;
   return <section className="rounded-xl border border-(--border-color) p-4" aria-label="三网去程和回程详情">
-    <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">三网线路</h2><FamilySwitch family={family} onChange={setFamily} /></div>
+    <div className="flex items-center justify-between gap-3"><h2 className="font-semibold">三网线路</h2><FamilySwitch family={family} onChange={setFamily} hasIpv6={hasIpv6} /></div>
     <DirectionDetails uuid={uuid} family={family} direction="forward" />
     <DirectionDetails uuid={uuid} family={family} direction="return" />
   </section>;
