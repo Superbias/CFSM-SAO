@@ -80,10 +80,10 @@ export function ReturnRouteSummary({ uuid }: { uuid: string }) {
       <FamilySwitch family={family} onChange={setFamily} />
     </div>
     <HomeInstanceLink uuid={uuid} className="block" aria-label={`查看 IPv${family} 三网线路详情`}>
-      <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-2 gap-y-1.5">
+      <div className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-2 gap-y-1.5">
         <span /><span className="text-center text-(--text-secondary)">去程</span><span className="text-center text-(--text-secondary)">回程</span>
         {carriers.map(carrier => <div key={carrier} className="contents">
-          <span className="text-(--text-secondary)">{names[carrier]}</span>
+          <span className="py-1 text-(--text-secondary)">{names[carrier]}</span>
           <RouteCell route={forward.data?.routes.find(r => r.carrier === carrier)} query={forward} direction="forward" />
           <RouteCell route={back.data?.routes.find(r => r.carrier === carrier)} query={back} direction="return" />
         </div>)}
