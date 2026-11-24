@@ -11,6 +11,7 @@ import { PingLineSwitcher } from "./PingLineSwitcher";
 import { QualityBars } from "./QualityBars";
 import { formatHealthBucketTooltip } from "./pingBucketText";
 import { usePingFamily } from "@/hooks/usePingOverview";
+import { NodeNetworkFamilySwitch } from "@/components/instance/ReturnRoutes";
 
 type MultiPingStatusDensity = "large" | "compact";
 type MultiPingMetric = "latency" | "loss";
@@ -191,6 +192,9 @@ export const MultiPingStatus = memo(function MultiPingStatus({
       role="group"
       aria-label="各线路延迟与丢包"
     >
+      <div className="mb-2 flex justify-end">
+        <NodeNetworkFamilySwitch uuid={uuid} />
+      </div>
       <div className="multi-ping-columns">
         <MultiPingMetricColumn
           uuid={uuid}
