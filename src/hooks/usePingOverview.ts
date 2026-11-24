@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useMinuteClock } from "@/hooks/useClock";
 import { useCarrierNames } from "@/hooks/usePublicConfig";
+import { useNodeMeta } from "@/hooks/useNode";
 import { useThemeSettings } from "@/hooks/useThemeSettings";
 import {
   getAllPingUuids,
@@ -412,17 +413,30 @@ export function useAllPingOverview(): {
  * （`useNodeCardModel`）必须共用这一份，否则会出现「行上写着电信、画的是联通」。
  * 条数仍由站点设置决定，只能换、不能加减。
  */
+const pingFamilies = new Map<string, number>();
+const familyListeners = new Set<() => void>();
+const subscribeFamily = (listener: () => void) => { familyListeners.add(listener); return () => { familyListeners.delete(listener); }; };
+const IPV6_TASK_IDS = [5, 6, 7] as const;
+
+export function usePingFamily(uuid: string): [number, (family: number) => void] {
+  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
+  const getSnapshot = () => hasIpv6 ? pingFamilies.get(uuid) ?? 4 : 4;
+  const family = useSyncExternalStore(subscribeFamily, getSnapshot, getSnapshot);
+  return [family, (value) => { pingFamilies.set(uuid, hasIpv6 && value === 6 ? 6 : 4); familyListeners.forEach(listener => listener()); }];
+}
+
 export function useNodeMultiPingTaskIds(uuid: string): readonly number[] {
+  const [family] = usePingFamily(uuid);
   const { homepageMultiPingTaskIds, homepagePingLineOverrides } = useThemeSettings();
   const siteOverrides = nodePingLineOverrides(homepagePingLineOverrides, uuid);
   const localOverrides = useNodePingLineOverrides(uuid);
   return useMemo(
     () =>
-      resolveNodePingLineTaskIds(
+      family === 6 ? IPV6_TASK_IDS : resolveNodePingLineTaskIds(
         resolveNodePingLineTaskIds(homepageMultiPingTaskIds, siteOverrides),
         localOverrides,
       ),
-    [homepageMultiPingTaskIds, localOverrides, siteOverrides],
+    [family, homepageMultiPingTaskIds, localOverrides, siteOverrides],
   );
 }
 
