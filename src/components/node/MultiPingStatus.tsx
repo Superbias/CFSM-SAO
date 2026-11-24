@@ -10,6 +10,8 @@ import { LatencyBars } from "./LatencyBars";
 import { PingLineSwitcher } from "./PingLineSwitcher";
 import { QualityBars } from "./QualityBars";
 import { formatHealthBucketTooltip } from "./pingBucketText";
+import { usePingFamily } from "@/hooks/usePingOverview";
+import { useNodeMeta } from "@/hooks/useNode";
 
 type MultiPingStatusDensity = "large" | "compact";
 type MultiPingMetric = "latency" | "loss";
@@ -30,6 +32,7 @@ const MultiPingMetricRow = memo(function MultiPingMetricRow({
   redrawKey: string;
 }) {
   const themeSettings = useThemeSettings();
+  const [family] = usePingFamily(uuid);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const latencyColor = resolveCustomLatencyColor(
     line.lastValue,
@@ -95,7 +98,7 @@ const MultiPingMetricRow = memo(function MultiPingMetricRow({
         )}
       >
         {metric === "latency" && (
-          <PingLineSwitcher uuid={uuid} slot={slot} taskName={line.taskName} />
+          family === 6 ? <span className="multi-ping-name">{line.taskName}</span> : <PingLineSwitcher uuid={uuid} slot={slot} taskName={line.taskName} />
         )}
         <strong
           className="multi-ping-value tabular"
@@ -180,6 +183,8 @@ export const MultiPingStatus = memo(function MultiPingStatus({
   className?: string;
 }) {
   const { resolvedAppearance } = usePreferences();
+  const [family, setFamily] = usePingFamily(uuid);
+  const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
   const colorsVersion = useMetricColorsVersion();
   const redrawKey = `${resolvedAppearance}:${colorsVersion}`;
 
@@ -189,6 +194,12 @@ export const MultiPingStatus = memo(function MultiPingStatus({
       role="group"
       aria-label="各线路延迟与丢包"
     >
+      {hasIpv6 && <div className="mb-2 flex items-center justify-between text-xs">
+        <span>三网延迟</span>
+        <div role="group" aria-label="延迟 IP 协议" className="flex gap-1">
+          {[4, 6].map(value => <button type="button" key={value} aria-pressed={family === value} onClick={() => setFamily(value)} className="rounded-md px-2 py-1" style={{ background: family === value ? "var(--progress-bg)" : "transparent" }}>IPv{value}</button>)}
+        </div>
+      </div>}
       <div className="multi-ping-columns">
         <MultiPingMetricColumn
           uuid={uuid}
