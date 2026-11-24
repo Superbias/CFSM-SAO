@@ -5,6 +5,7 @@ import { cfsmGet } from "@/services/cfsm/http";
 import { getServerApiBase } from "@/services/api";
 import { HomeInstanceLink } from "@/components/node/HomeInstanceLink";
 import { useNodeMeta } from "@/hooks/useNode";
+import { usePingFamily } from "@/hooks/usePingOverview";
 
 const schema = z.object({
   measured_at: z.number().nullable(), state: z.string().optional(), error: z.string().optional(),
@@ -74,8 +75,7 @@ function RouteCell({ route, query, direction }: { route?: Route; query: ReturnTy
 
 export function ReturnRouteSummary({ uuid }: { uuid: string }) {
   const hasIpv6 = Boolean(useNodeMeta(uuid)?.ipv6);
-  const [selectedFamily, setFamily] = useState(4);
-  const family = hasIpv6 ? selectedFamily : 4;
+  const [family, setFamily] = usePingFamily(uuid);
   const forward = useRoutes(uuid, "forward", family), back = useRoutes(uuid, "return", family);
   return <section className="mt-2 min-w-0 rounded-xl bg-(--bg-secondary) p-3 text-xs" aria-label="三网去程和回程">
     <div className="mb-2 flex items-center justify-between gap-1">
